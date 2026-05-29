@@ -1,179 +1,254 @@
-# ============================================
-# TASK 3 : DATA VISUALIZATION PROJECT
-# ============================================
-# Dataset Used:
-# cleaned_books_dataset.csv
-#
+# =====================================================
+# CAR PRICE PREDICTION USING MACHINE LEARNING
+# =====================================================
 # Libraries Required:
-# pip install pandas matplotlib seaborn
-# ============================================
+# pip install pandas numpy matplotlib seaborn scikit-learn
+# =====================================================
+
+# -----------------------------
+# IMPORT LIBRARIES
+# -----------------------------
 
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# --------------------------------------------
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import r2_score
+
+# =====================================================
 # LOAD DATASET
-# --------------------------------------------
+# =====================================================
 
-df = pd.read_csv("cleaned_books_dataset.csv")
+# Replace with your dataset filename
+df = pd.read_csv("CarPrice_Assignment.csv")
 
+# Display first rows
+print("First 5 Rows:\n")
 print(df.head())
 
-# --------------------------------------------
-# SET VISUAL STYLE
-# --------------------------------------------
+# =====================================================
+# DATA EXPLORATION
+# =====================================================
+
+print("\nDataset Shape:")
+print(df.shape)
+
+print("\nColumn Names:")
+print(df.columns)
+
+print("\nData Types:")
+print(df.dtypes)
+
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+print("\nStatistical Summary:")
+print(df.describe())
+
+# =====================================================
+# DATA CLEANING
+# =====================================================
+
+# Remove duplicate rows
+df = df.drop_duplicates()
+
+# Check null values
+print("\nNull Values After Cleaning:")
+print(df.isnull().sum())
+
+# =====================================================
+# FEATURE ENGINEERING
+# =====================================================
+
+# Example:
+# Extract company name from CarName column
+
+df['CompanyName'] = df['CarName'].apply(lambda x: x.split(' ')[0])
+
+# Drop unnecessary column
+df.drop('CarName', axis=1, inplace=True)
+
+# =====================================================
+# ENCODING CATEGORICAL VARIABLES
+# =====================================================
+
+le = LabelEncoder()
+
+categorical_cols = df.select_dtypes(include=['object']).columns
+
+for col in categorical_cols:
+    df[col] = le.fit_transform(df[col])
+
+print("\nEncoded Dataset:")
+print(df.head())
+
+# =====================================================
+# DATA VISUALIZATION
+# =====================================================
 
 sns.set(style="whitegrid")
 
-# ============================================
-# 1. BAR CHART
-# Rating Distribution
-# ============================================
+# =====================================================
+# 1. PRICE DISTRIBUTION
+# =====================================================
 
 plt.figure(figsize=(8,5))
 
-sns.countplot(x="Rating", data=df, order=df["Rating"].value_counts().index)
+sns.histplot(df['price'], bins=20, kde=True)
 
-plt.title("Distribution of Book Ratings")
-plt.xlabel("Rating")
-plt.ylabel("Number of Books")
-
-plt.show()
-
-# ============================================
-# 2. HISTOGRAM
-# Price Distribution
-# ============================================
-
-plt.figure(figsize=(8,5))
-
-sns.histplot(df["Price"], bins=15, kde=True)
-
-plt.title("Book Price Distribution")
+plt.title("Car Price Distribution")
 plt.xlabel("Price")
 plt.ylabel("Frequency")
 
 plt.show()
 
-# ============================================
-# 3. BOXPLOT
-# Detecting Outliers
-# ============================================
+# =====================================================
+# 2. CORRELATION HEATMAP
+# =====================================================
+
+plt.figure(figsize=(14,10))
+
+sns.heatmap(
+    df.corr(),
+    cmap='coolwarm',
+    annot=False
+)
+
+plt.title("Feature Correlation Heatmap")
+
+plt.show()
+
+# =====================================================
+# 3. HORSEPOWER VS PRICE
+# =====================================================
 
 plt.figure(figsize=(8,5))
 
-sns.boxplot(x=df["Price"])
-
-plt.title("Book Price Outlier Detection")
-
-plt.show()
-
-# ============================================
-# 4. PIE CHART
-# Rating Percentage
-# ============================================
-
-rating_counts = df["Rating"].value_counts()
-
-plt.figure(figsize=(7,7))
-
-plt.pie(
-    rating_counts,
-    labels=rating_counts.index,
-    autopct='%1.1f%%'
+sns.scatterplot(
+    x='horsepower',
+    y='price',
+    data=df
 )
 
-plt.title("Percentage of Ratings")
-
-plt.show()
-
-# ============================================
-# 5. TOP 10 MOST EXPENSIVE BOOKS
-# ============================================
-
-top_books = df.sort_values(by="Price", ascending=False).head(10)
-
-plt.figure(figsize=(10,6))
-
-sns.barplot(
-    x="Price",
-    y="Title",
-    data=top_books
-)
-
-plt.title("Top 10 Most Expensive Books")
-plt.xlabel("Price")
-plt.ylabel("Book Title")
-
-plt.show()
-
-# ============================================
-# 6. HEATMAP
-# Correlation Analysis
-# ============================================
-
-# Create numeric rating mapping
-rating_map = {
-    "One": 1,
-    "Two": 2,
-    "Three": 3,
-    "Four": 4,
-    "Five": 5
-}
-
-df["Numeric_Rating"] = df["Rating"].map(rating_map)
-
-# Correlation matrix
-corr = df[["Price", "Numeric_Rating"]].corr()
-
-plt.figure(figsize=(6,4))
-
-sns.heatmap(
-    corr,
-    annot=True,
-    cmap="coolwarm"
-)
-
-plt.title("Correlation Heatmap")
-
-plt.show()
-
-# ============================================
-# 7. LINE CHART
-# Price Trend
-# ============================================
-
-sorted_df = df.sort_values(by="Price")
-
-plt.figure(figsize=(10,5))
-
-plt.plot(sorted_df["Price"].values)
-
-plt.title("Book Price Trend")
-plt.xlabel("Book Index")
+plt.title("Horsepower vs Price")
+plt.xlabel("Horsepower")
 plt.ylabel("Price")
 
 plt.show()
 
-# ============================================
-# DATA STORY / INSIGHTS
-# ============================================
+# =====================================================
+# 4. MILEAGE VS PRICE
+# =====================================================
 
-print("\n================ INSIGHTS ================\n")
+plt.figure(figsize=(8,5))
 
-print("1. Most books belong to medium ratings.")
-print("2. Majority of book prices fall within a moderate range.")
-print("3. Some books are significantly expensive (outliers).")
-print("4. Higher ratings may slightly relate to higher prices.")
-print("5. Price distribution is not perfectly uniform.")
+sns.scatterplot(
+    x='citympg',
+    y='price',
+    data=df
+)
 
-print("\n==========================================")
+plt.title("Mileage vs Price")
+plt.xlabel("Mileage (City MPG)")
+plt.ylabel("Price")
 
-# ============================================
-# SAVE FINAL DATASET
-# ============================================
+plt.show()
 
-df.to_csv("final_visualized_dataset.csv", index=False)
+# =====================================================
+# PREPARE FEATURES & TARGET
+# =====================================================
 
-print("\nVisualization Task Completed Successfully!")
+X = df.drop('price', axis=1)
+y = df['price']
+
+# =====================================================
+# TRAIN TEST SPLIT
+# =====================================================
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42
+)
+
+# =====================================================
+# MODEL BUILDING
+# =====================================================
+
+model = LinearRegression()
+
+# Train model
+model.fit(X_train, y_train)
+
+# =====================================================
+# PREDICTION
+# =====================================================
+
+y_pred = model.predict(X_test)
+
+# =====================================================
+# MODEL EVALUATION
+# =====================================================
+
+mae = mean_absolute_error(y_test, y_pred)
+
+mse = mean_squared_error(y_test, y_pred)
+
+rmse = np.sqrt(mse)
+
+r2 = r2_score(y_test, y_pred)
+
+print("\n============== MODEL PERFORMANCE ==============\n")
+
+print("Mean Absolute Error:", mae)
+
+print("Mean Squared Error:", mse)
+
+print("Root Mean Squared Error:", rmse)
+
+print("R2 Score:", r2)
+
+# =====================================================
+# ACTUAL VS PREDICTED GRAPH
+# =====================================================
+
+plt.figure(figsize=(8,5))
+
+plt.scatter(y_test, y_pred)
+
+plt.xlabel("Actual Prices")
+plt.ylabel("Predicted Prices")
+
+plt.title("Actual vs Predicted Car Prices")
+
+plt.show()
+
+# =====================================================
+# SAMPLE PREDICTION
+# =====================================================
+
+sample_prediction = model.predict([X_test.iloc[0]])
+
+print("\nSample Predicted Price:")
+print(sample_prediction)
+
+# =====================================================
+# SAVE CLEANED DATASET
+# =====================================================
+
+df.to_csv("cleaned_car_price_dataset.csv", index=False)
+
+print("\nCleaned dataset saved successfully!")
+
+# =====================================================
+# PROJECT COMPLETED
+# =====================================================
+
+print("\nCar Price Prediction Project Completed!")
